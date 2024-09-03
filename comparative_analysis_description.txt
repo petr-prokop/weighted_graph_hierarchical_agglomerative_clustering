@@ -1,0 +1,45 @@
+In the section Comparative analysis of publication PROKOP, Petr; DRÁŽDILOVÁ, Pavla; PLATOŠ, Jan. Overlapping community detection in weighted networks via hierarchical clustering. PLOS One. we have used 3rd party software. Thanks to the authors for making the code available for the use.
+
+OSLOM
+http://www.oslom.org/index.html 
+Lancichinetti, A., Radicchi, F., Ramasco, J. J., & Fortunato, S. (2011). Finding statistically significant communities in networks. PloS one, 6(4), e18961.
+
+CDlib
+https://cdlib.readthedocs.io/en/latest/
+G. Rossetti, L. Milli, R. Cazabet. CDlib: a Python Library to Extract, Compare and Evaluate Communities from Complex Networks. Applied Network Science Journal. 2019. DOI:10.1007/s41109-019-0165-9
+
+graph-tool
+https://graph-tool.skewed.de/
+Tiago P. Peixoto, “The graph-tool python library”, figshare. (2014) DOI: 10.6084/m9.figshare.1164194
+
+Karate Club
+https://karateclub.readthedocs.io/en/latest/modules/root.html
+Rozemberczki, B., Kiss, O., & Sarkar, R. (2020, October). Karate Club: an API oriented open-source python framework for unsupervised learning on graphs. In Proceedings of the 29th ACM international conference on information & knowledge management (pp. 3125-3132).
+
+The configurations for reference methods is summarized as follows:
+\begin{itemize}
+    \item \textbf{OSLOM} was tested with several configurations to explore its performance:
+    \begin{itemize}
+        \item \texttt{-r 10} for 10 runs to ensure robustness.
+        \item \texttt{-fast} for quick execution.
+        \item \texttt{-r 10 -hr 0} to limit analysis to the first hierarchical level.
+        \item \texttt{-r 5 -hr 0 -t 0.2} with a stricter p-value threshold.
+        \item \texttt{-r 5 -hr 0 -cp 0.3} and \texttt{-r 5 -hr 0 -cp 0.7} to test different coverage parameters.
+        \item \texttt{-infomap 5 -r 5 -hr 0} integrating Infomap results for initial partitioning.
+        \item \texttt{-louvain 5 -r 5 -hr 0} using Louvain method results for initial partitioning.
+    \end{itemize}
+
+    \item \textbf{IPCA} was applied with threshold values \texttt{tin=[0.5, 0.1, 0.01]} to explore various levels of cluster pruning.
+
+    \item \textbf{ASLPAW} was employed with default settings, without additional parameter tuning.
+
+    \item \textbf{WSBM} was configured to handle both non-overlapping and overlapping communities, with and without degree correction (\texttt{deg\_corr = True/False}), and using both real-normal and real-exponential distribution models.
+
+    \item \textbf{DANMF} was configured with the following settings:
+    \begin{itemize}
+        \item \texttt{hidden\_layers\_size}: Various layer sizes such as \texttt{"32", "64", "128", "256", "64, 32", "128, 64", "128,32", "256,128", "256,64"} were tested.
+        \item \texttt{output\_layer\_size}: Ranged from 2 to a maximum size, determined by the trial.
+        \item \texttt{iterations}: Evaluated with 10, 100, 500, and 1000 iterations.
+        \item \texttt{lamb}: Tested with lambda values of 0.1, 1, and 10.
+    \end{itemize}
+\end{itemize}
