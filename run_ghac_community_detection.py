@@ -15,7 +15,7 @@ import cdlib.algorithms
 from graph_hierarchical_agglomerative_clustering import GHACLinkageMethod, GraphAgglomerativeClusteringClosedTrail
 import functions
 
-def evaluate_hierarchy(graph:nx.Graph, linkage_matrix:np.ndarray, bases:list, weight_param:str=None, min_distance_in_modularity_calculation:float=0.000, xlim:tuple[int, int]=None, figsize:tuple[int, int]=(36,12), ground_truth_communities:list|None=None, plot_dendrograms:bool=True, ct_distance_matrix:np.ndarray=None):
+def evaluate_hierarchy(graph:nx.Graph, linkage_matrix:np.ndarray, bases:list, weight_param:str=None, min_distance_in_modularity_calculation:float=0.000, xlim:tuple[int, int]=None, figsize:tuple[int, int]=(12,12), ground_truth_communities:list|None=None, plot_dendrograms:bool=True, ct_distance_matrix:np.ndarray=None):
     dendrogram_modularity_info = dict()
     levels_for_calculation = list()
     distance_vector = linkage_matrix[:, 2].copy()
@@ -76,7 +76,7 @@ def evaluate_hierarchy(graph:nx.Graph, linkage_matrix:np.ndarray, bases:list, we
         fig, axs = plt.subplots(len(metrics)+1, sharex=True, figsize=figsize, gridspec_kw=gridspec_kw)
         for e, metric_name in enumerate(metrics):
             ax = fig.get_axes()[e]
-            ax.plot(dendrogram_modularity_info.keys(), [dendrogram_modularity_info[k][metric_name] for k in dendrogram_modularity_info.keys()], 'x-')
+            ax.plot(list(dendrogram_modularity_info.keys())[:-1], [dendrogram_modularity_info[k][metric_name] for k in dendrogram_modularity_info.keys()][:-1], 'x-')
             ax.set_title(f'{metric_name}')
             ax.xaxis.set_ticks(x_ticks)
             ax.grid(True, axis='both')
@@ -84,7 +84,14 @@ def evaluate_hierarchy(graph:nx.Graph, linkage_matrix:np.ndarray, bases:list, we
             if xlim is not None:
                 ax.set_xlim(xlim)
         ax2 = axs[-1]
-        scipy.cluster.hierarchy.dendrogram(linkage_matrix, orientation='right', ax=ax2, labels=bases, color_threshold=best_modularity_distance + 0.001)
+        if 'original_label' in graph.nodes(data=True)[0]:
+            node_labels = list(nx.get_node_attributes(graph, 'original_label').values())
+            relabeled_bases = list()
+            for base in bases:
+                relabeled_bases.append(', '.join(sorted([node_labels[node] for node in base])))
+            scipy.cluster.hierarchy.dendrogram(linkage_matrix, orientation='right', ax=ax2, labels=relabeled_bases, color_threshold=best_modularity_distance + 0.001)
+        else:
+            scipy.cluster.hierarchy.dendrogram(linkage_matrix, orientation='right', ax=ax2, labels=bases, color_threshold=best_modularity_distance + 0.001)
         plt.xlabel('step')
         ax2.set_title('Dendrogram')
         ax2.xaxis.set_ticks(levels_for_calculation)
@@ -115,7 +122,7 @@ def test_karate():
     os.system('closed_trail_distance_binary/efficient_suurballe\
                 tmp_files/graph_gcc.csv edgelist full\
                 tmp_files/graph_gcc_distance_matrix.csv')
-    ct_distance_matrix = np.loadtxt('tmp_files/graph_gcc_distance_matrix.csv', dtype=int, delimiter='\t')
+    ct_distance_matrix = np.loadtxt('tmp_files/graph_gcc_distance_matrix.csv', dtype=np.float32, delimiter='\t')
     os.system('rm -rf tmp_files')
 
     # get bases (cliques) for GHAC
@@ -141,5 +148,62 @@ def test_karate():
     with pd.option_context('display.width', None, 'display.max_colwidth', None):
         print(df_best[['modularity', 'max_val', 'comms_len', 'communities']])
 
+def run_oecd_trade_network():
+    graph_filename = 'data/oecd_trade_network_2019_symmetric.gml'
+    min_base_size = 2
+    linkage = GHACLinkageMethod.COMPLETE
+
+    # preprocess graph
+    graph = nx.read_gml(graph_filename)
+    print(f'Number of nodes: {graph.number_of_nodes()}, number of edges: {graph.number_of_edges()}')
+    nx.set_edge_attributes(graph, 1, 'weight_uniform')
+    # graph.remove_edges_from(nx.selfloop_edges(graph))
+    # graph.remove_edges_from(list(nx.bridges(graph)))
+    # graph_gcc = nx.subgraph(graph, max(nx.connected_components(graph), key=len))
+    graph_gcc = graph.copy()
+    graph_gcc = nx.convert_node_labels_to_integers(graph_gcc, first_label=0, ordering='sorted', label_attribute='original_label')
+    
+    def normalize2(x, min, max):
+            return (2*(x - min) / (max-min)) + 1
+    min_weight = min([graph_gcc[u][v]['weight'] for u, v in graph_gcc.edges()])
+    max_weight = max([graph_gcc[u][v]['weight'] for u, v in graph_gcc.edges()])
+    nx.set_edge_attributes(graph_gcc, {(u,v): {'weight_normalized': normalize2(w, min_weight, max_weight)} for u,v,w in graph_gcc.edges(data='weight')})
+    nx.set_edge_attributes(graph_gcc, dict([((u,v),1/w) for u,v,w in graph_gcc.edges(data='weight_normalized')]), 'cost')
+
+    # compute CT distance matrix
+    os.system('mkdir tmp_files')    
+    nx.write_gml(graph_gcc, 'tmp_files/graph_gcc.gml')
+    nx.write_edgelist(graph_gcc, 'tmp_files/graph_gcc.csv', delimiter=' ', data=['cost'])
+    os.system('closed_trail_distance_binary/efficient_suurballe\
+                tmp_files/graph_gcc.csv edgelist full\
+                tmp_files/graph_gcc_distance_matrix.csv')
+    ct_distance_matrix = np.loadtxt('tmp_files/graph_gcc_distance_matrix.csv', dtype=np.float32, delimiter='\t')
+    if ct_distance_matrix.max() > 1000:
+        ct_distance_matrix[ct_distance_matrix == ct_distance_matrix.max()] = 998
+    os.system('rm -rf tmp_files')
+
+    # get bases (cliques) for GHAC
+    cliques = list()
+    for clique in nx.find_cliques(graph_gcc):
+        if len(clique) >= min_base_size:
+            cliques.append(tuple(sorted([int(node) for node in clique])))
+    cliques = list(sorted(cliques, key=len, reverse=True))
+
+    # run GHAC
+    print('-'*50)
+    print('Running GHAC...')
+    ghac = GraphAgglomerativeClusteringClosedTrail(graph_gcc, linkage, ct_distance_matrix, cliques, 'weight_normalized')
+    linkage_matrix = ghac.run()
+
+    # evaluate hierarchy, plot dendrogram and show best coverage
+    print('-'*50)
+    print('Evaluation of hierarchical structure...')
+    df_results = evaluate_hierarchy(graph_gcc, linkage_matrix, cliques, weight_param='weight_normalized', ct_distance_matrix=ct_distance_matrix)
+    print('-'*50)
+    print('The best network covers identified by different modularities:')
+    df_best = functions.get_best_split_results(df_results)
+    with pd.option_context('display.width', None, 'display.max_colwidth', None):
+        print(df_best[['modularity', 'max_val', 'comms_len', 'communities']])
 if __name__ == '__main__':
-    test_karate()
+    # test_karate()
+    run_oecd_trade_network()
