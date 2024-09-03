@@ -26,7 +26,7 @@ class GraphAgglomerativeClusteringClosedTrail():
         self.clusters_map_of_sets = dict()
         self.clusters_map_of_edges_sets = dict() # this dictionary contains list of edges for conducting subgraph for clusters
         for i, base in enumerate(self.bases):
-            self.clusters_map_of_sets[i] = set(base)            
+            self.clusters_map_of_sets[i] = set(base)
             graph_overlap = nx.subgraph(self.graph, base)
             self.clusters_map_of_edges_sets[i] = set()
             for u,v in nx.edges(graph_overlap):
@@ -44,7 +44,7 @@ class GraphAgglomerativeClusteringClosedTrail():
         while i < bases_count - 1:
             if i % 100 == 0:
                 print('Agglomeration', i, bases_count - 1)
-            tmp = np.unravel_index(np.argmin(distance_matrix, axis=None), distance_matrix.shape)            
+            tmp = np.unravel_index(np.argmin(distance_matrix, axis=None), distance_matrix.shape)
             m1, m2 = tmp
             
             linkage_matrix[i, 0] = linkage_clusters_reuse_translation[m1]
@@ -83,7 +83,7 @@ class GraphAgglomerativeClusteringClosedTrail():
                 clusters_distance_matrix[j, i] = d
         return clusters_distance_matrix
 
-    def calculate_ct_method_between_clusters(self, cluster1, cluster2, edges_list1, edges_list2):     
+    def calculate_ct_method_between_clusters(self, cluster1, cluster2, edges_list1, edges_list2):
         intersect = cluster1 & cluster2
         submatrix_indices = np.ix_(list(cluster1 - intersect), list(cluster2 - intersect))
         submatrix = self.ct_distance_matrix[submatrix_indices]        
@@ -101,7 +101,7 @@ class GraphAgglomerativeClusteringClosedTrail():
             if len(intersect) == 1:
                 graph_overlap = nx.subgraph(self.graph, [node for node in intersect])
             else:
-                graph_overlap = nx.edge_subgraph(self.graph, edges_list1 & edges_list2) 
+                graph_overlap = nx.edge_subgraph(self.graph, edges_list1 & edges_list2)
             cliques_in_overlap = list(nx.find_cliques(graph_overlap))
             max_clique_size = len(max(cliques_in_overlap, key=len)) if len(cliques_in_overlap) > 0 else 0
             denominator = 1 + max_clique_size
