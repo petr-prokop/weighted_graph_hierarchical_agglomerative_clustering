@@ -3,6 +3,7 @@
 In this repository the code for wGHAC community detection method is presented. This code is licensed under GNU GPLv3.
 
 This repository contains supplementary material for the publication PROKOP, Petr; DRÁŽDILOVÁ, Pavla; PLATOŠ, Jan. Overlapping community detection in weighted networks via hierarchical clustering. PloS one, 2024, 19.10: e0312596. [https://doi.org/10.1371/journal.pone.0312596](https://doi.org/10.1371/journal.pone.0312596).
+
 Overview of the proposed methodology for community detection in weighted networks is given in following figure.
 ![Overview of the proposed methodology for community detection in weighted networks](data/wGHAC_overview.PNG)
 
