@@ -2,7 +2,10 @@
 
 In this repository the code for wGHAC community detection method is presented. This code is licensed under GNU GPLv3.
 
-This repository contains supplementary material for the publication PROKOP, Petr; DRÁŽDILOVÁ, Pavla; PLATOŠ, Jan. Overlapping community detection in weighted networks via hierarchical clustering. PLOS One. [https://doi.org/10.1371/journal.pone.0312596](https://doi.org/10.1371/journal.pone.0312596).
+This repository contains supplementary material for the publication PROKOP, Petr; DRÁŽDILOVÁ, Pavla; PLATOŠ, Jan. Overlapping community detection in weighted networks via hierarchical clustering. PloS one, 2024, 19.10: e0312596. [https://doi.org/10.1371/journal.pone.0312596](https://doi.org/10.1371/journal.pone.0312596).
+Overview of the proposed methodology for community detection in weighted networks is given in following figure.
+![Overview of the proposed methodology for community detection in weighted networks](data/wGHAC_overview.PNG)
+
 In the file *comparative_analysis_description.txt* we have included the details on the specific configurations for reference methods.
 
 In this study, we examined the trade connections among current OECD member states and trading partners, utilizing the Balanced Trade Value for Total Product as an indicator of bilateral trade relations. Trade network used in this study is included in the *data* directory. The full description for that dataset is included in the associated publication. The orignal source for data before processing is: OECD. Balanced merchandise trade statistics by CPA - OECD (Edition 2021).2022;doi:https://doi.org/https://doi.org/10.1787/3158e38e-en.
