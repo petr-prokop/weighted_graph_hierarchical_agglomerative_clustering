@@ -101,7 +101,8 @@ class GraphAgglomerativeClusteringClosedTrail():
             if len(intersect) == 1:
                 graph_overlap = nx.subgraph(self.graph, [node for node in intersect])
             else:
-                graph_overlap = nx.edge_subgraph(self.graph, edges_list1 & edges_list2)
+                graph_overlap = nx.edge_subgraph(self.graph, edges_list1 & edges_list2).copy()
+                graph_overlap.add_nodes_from(intersect)
             cliques_in_overlap = list(nx.find_cliques(graph_overlap))
             max_clique_size = len(max(cliques_in_overlap, key=len)) if len(cliques_in_overlap) > 0 else 0
             denominator = 1 + max_clique_size
